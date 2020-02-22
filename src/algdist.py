@@ -60,17 +60,18 @@ def algorithm_main(game):
     T = game.T
     n_vars = len(xini[0])
 
-    L = build_L_Kn(N, n_vars)
+    #L = build_L_Kn(N, n_vars)
     #A, b, c = to_matrix_form(game)
     #n_r = A.shape[0]
     #A_ = np.vstack([A.T, np.eye(n_r)])
     #c_ = np.hstack([c, np.zeros(n_r)])
 
-    ws = L.dot(np.random.uniform(0, 3, L.shape[0]))
-    ws = [ws[i : i + n_vars] for i in range(0, L.shape[0], n_vars)]
+    #ws = L.dot(np.random.uniform(0, 3, L.shape[0]))
+    #ws = [ws[i : i + n_vars] for i in range(0, L.shape[0], n_vars)]
+    ws = [np.zeros(n_vars) for _ in range(N)]
     xs = [x for x in xini]
-    n_iters = 10000
-    aph = 1/10
+    n_iters = 1000
+    aph = 1/ (N + 3)
 
     for i in range(n_iters):
         
@@ -79,6 +80,7 @@ def algorithm_main(game):
             #G = proy[n][2]
             C = proy[n][0]
             b = proy[n][1]
+            ma = proy[n][2]
 
             #tmp = (sum(xs) / N).copy()
             #tmp -= (1 / (i + 5)) * grads[n]
@@ -90,9 +92,12 @@ def algorithm_main(game):
                 if n2 != n:
                     tmp -= aph * (xs[n] - xs[n2])
             
-            sol = proyect_into_linear(tmp, C, b)
+            new_x = tmp.copy()
+            sol = proyect_into_linear(tmp[ma], C, b)
+            new_x[ma] = sol[0]
             #sqp = quadprog.solve_qp(G, tmp, C.T, b, 0)
-            new_xs.append(sol[0].copy())
+            #new_xs.append(sol[0].copy())
+            new_xs.append(new_x)
         for n in range(N):
             for n2 in range(N):
                 if n != n2:
@@ -109,5 +114,4 @@ def algorithm_main(game):
             #print(i, [sum(w) for w in ws])
         xs = new_xs[:]
 
-    for n in range(N):
-        print(n, np.inner(grads[n], xs[n]))
+    for n in range(N): print(n, np.inner(grads[n], xs[n]))

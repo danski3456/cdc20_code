@@ -256,6 +256,8 @@ def build_proyection_player(n, game):
     N_2 = cm_A.shape[0]
 
     tmp = np.vstack([pl_A, cm_A])
+    ma = np.where(np.abs(tmp).sum(axis=0) != 0)[0]
+    tmp = tmp[:, ma]
 #
 #    tmp = np.hstack([
 #        np.eye(T),
@@ -269,10 +271,12 @@ def build_proyection_player(n, game):
 #        tmp
 #    ])
 #    B = np.vstack([tmp, aux]) 
-    A_pl = np.vstack([tmp, np.eye(4 * T * N + 2 * T)]) # variables are positive
+    #A_pl = np.vstack([tmp, np.eye(4 * T * N + 2 * T)]) # variables are positive
+    A_pl = np.vstack([tmp, np.eye(len(ma))])
 
-    b = np.hstack([np.zeros(N_1), -pb, -ps, np.zeros(4 * T * N + 2 * T) ]) 
-    G = np.eye(A.shape[0])
-    return A_pl, b, G
+    #b = np.hstack([np.zeros(N_1), -pb, -ps, np.zeros(4 * T * N + 2 * T) ]) 
+    b = np.hstack([np.zeros(N_1), -pb, -ps, np.zeros(len(ma)) ]) 
+    #G = np.eye(A.shape[0])
+    return A_pl, b, ma
         
 
