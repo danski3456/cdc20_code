@@ -1,7 +1,8 @@
 import quadprog
 import numpy as np
 from src.game import Game
-from src.build import build_proyection_player
+from src.build import build_proyection_player, to_matrix_form
+from src.proyection import proyect_into_linear
 
 def build_L_Kn(N, n_vars):
     
@@ -40,12 +41,10 @@ def algorithm_init(g):
     for n, pl in enumerate(PL):
         gf = np.zeros(n_cons)
         
-        tmp = np.hstack([
-            np.ones(T) * (pl._sm - pl._s0),
-            np.ones(T) * pl._s0,
-            np.ones(2 * T) * pl._ram,
-        ])
-        gf[4 * T * n: 4 * T * (n + 1)] = tmp
+        gf[T * n: T * (n + 1)] = pl._sm - pl._s0
+        gf[T * N + T * n: T * N + T * (n + 1)] = pl._s0
+        gf[2 * T * N + T * n: 2 * T * N + T * (n + 1)] = pl._ram
+        gf[3 * T * N + T * n: 3 * T * N + T * (n + 1)] = pl._ram
         gf[-2 * T: - T] = pl._x
         gf[-T: ] = - pl._x
 
@@ -62,46 +61,53 @@ def algorithm_main(game):
     n_vars = len(xini[0])
 
     L = build_L_Kn(N, n_vars)
+    #A, b, c = to_matrix_form(game)
+    #n_r = A.shape[0]
+    #A_ = np.vstack([A.T, np.eye(n_r)])
+    #c_ = np.hstack([c, np.zeros(n_r)])
 
-    ws = L.dot(np.random.uniform(0, N, L.shape[0]))
+    ws = L.dot(np.random.uniform(0, 3, L.shape[0]))
     ws = [ws[i : i + n_vars] for i in range(0, L.shape[0], n_vars)]
     xs = [x for x in xini]
-    n_iters = 5000
-    aph = 1
+    n_iters = 10000
+    aph = 1/10
 
     for i in range(n_iters):
         
         new_xs = []
         for n in range(N):
-            G = proy[n][2]
+            #G = proy[n][2]
             C = proy[n][0]
             b = proy[n][1]
 
-            tmp = (sum(xs) / N).copy()
-            tmp -= (1 / (i + 1)) * grads[n]
+            #tmp = (sum(xs) / N).copy()
+            #tmp -= (1 / (i + 5)) * grads[n]
 
-            #tmp = xs[n].copy()
-            #tmp -= aph * grads[n]
-            #tmp -= aph * ws[n]
-            #for n2 in range(N):
-            #    if n2 != n:
-            #        tmp -= aph * (xs[n] - xs[n2])
+            tmp = xs[n].copy()
+            tmp -= aph * grads[n]
+            tmp -= aph * ws[n]
+            for n2 in range(N):
+                if n2 != n:
+                    tmp -= aph * (xs[n] - xs[n2])
             
-            sqp = quadprog.solve_qp(G, tmp, C.T, b, 0)
-            new_xs.append(sqp[0].copy())
-        #for n in range(N):
-        #    for n2 in range(N):
-        ##        if n != n2:
-        #            ws[n] += new_xs[n] - new_xs[n2]
+            sol = proyect_into_linear(tmp, C, b)
+            #sqp = quadprog.solve_qp(G, tmp, C.T, b, 0)
+            new_xs.append(sol[0].copy())
+        for n in range(N):
+            for n2 in range(N):
+                if n != n2:
+                    ws[n] += new_xs[n] - new_xs[n2]
 
         d1 = np.hstack(xs)
         d2 = np.hstack(new_xs)
+        
         if i % 50 == 0:
             dis = np.linalg.norm(d1 - d2)
             if dis < 1e-10:
                 break
             print(i, np.linalg.norm(d1 - d2))
-        xs = new_xs
+            #print(i, [sum(w) for w in ws])
+        xs = new_xs[:]
 
     for n in range(N):
         print(n, np.inner(grads[n], xs[n]))

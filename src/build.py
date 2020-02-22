@@ -58,26 +58,6 @@ def solve_centralized(player_list, buying_price, selling_price):
 
     ## Variable boudns
 
-    cons_bnd_ub = {(n, t) :
-    plp.LpConstraint(
-                 e=ch_vars[(n, t)],
-                 sense=plp.LpConstraintLE,
-                 rhs=player_list[n]._ram,
-                 name="cons_bnd_up_{0}_{1}".format(n, t))
-           for t in set_T for n in set_N}
-
-    for k in cons_bnd_ub: model.addConstraint(cons_bnd_ub[k])
-
-    ## Battery lower bound
-    cons_bnd_lb = {(n, t) :
-    plp.LpConstraint(
-                 e=dis_vars[(n, t)],
-                 sense=plp.LpConstraintLE,
-                 rhs=player_list[n]._ram,
-                 name="cons_bnd_low_{0}_{1}".format(n, t))
-           for t in set_T for n in set_N}
-
-    for k in cons_bnd_lb: model.addConstraint(cons_bnd_lb[k])
 
     ## Battery upper bound
     cons_bat_ub = {(n, j) :
@@ -103,6 +83,26 @@ def solve_centralized(player_list, buying_price, selling_price):
 
     for k in cons_bat_lb: model.addConstraint(cons_bat_lb[k])
 
+    cons_bnd_ub = {(n, t) :
+    plp.LpConstraint(
+                 e=ch_vars[(n, t)],
+                 sense=plp.LpConstraintLE,
+                 rhs=player_list[n]._ram,
+                 name="cons_bnd_up_{0}_{1}".format(n, t))
+           for t in set_T for n in set_N}
+
+    for k in cons_bnd_ub: model.addConstraint(cons_bnd_ub[k])
+
+    ## Battery lower bound
+    cons_bnd_lb = {(n, t) :
+    plp.LpConstraint(
+                 e=dis_vars[(n, t)],
+                 sense=plp.LpConstraintLE,
+                 rhs=player_list[n]._ram,
+                 name="cons_bnd_low_{0}_{1}".format(n, t))
+           for t in set_T for n in set_N}
+
+    for k in cons_bnd_lb: model.addConstraint(cons_bnd_lb[k])
     ## Final equality constraint
 
     cons_z = {t: 
@@ -131,7 +131,7 @@ def solve_centralized(player_list, buying_price, selling_price):
                      for t in set_T}
     for k in cons_zo: model.addConstraint(cons_zo[k])
 
-    cons = [cons_bnd_ub, cons_bnd_lb, cons_bat_ub, cons_bat_lb, cons_z,
+    cons = [cons_bat_ub, cons_bat_lb, cons_bnd_ub, cons_bnd_lb, cons_z,
     cons_zo]
 
     objective = plp.lpSum(-zp_vars[t] * buying_price[t] + zn_vars[t] *
