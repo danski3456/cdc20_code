@@ -243,12 +243,13 @@ def extract_common(A, T): return A[:, :2 * T]
 
 def build_proyection_player(n, game):
 
+    A = game.A
     ps = game._selling_price
     pb = game._buying_price
     T = game.T
     N = game.N
 
-    A, _, _ = to_matrix_form(game)
+    #A, _, _ = to_matrix_form(game)
 
     pl_A = extract_player(n, A, T).T.copy()
     N_1 = pl_A.shape[0]
@@ -258,25 +259,9 @@ def build_proyection_player(n, game):
     tmp = np.vstack([pl_A, cm_A])
     ma = np.where(np.abs(tmp).sum(axis=0) != 0)[0]
     tmp = tmp[:, ma]
-#
-#    tmp = np.hstack([
-#        np.eye(T),
-#        - np.eye(T)
-#    ])
-#    tmp = np.vstack([
-#        tmp, -tmp 
-#    ])
-#    tmp = np.hstack([
-#        np.zeros((2 * T, 4 * T * N)),
-#        tmp
-#    ])
-#    B = np.vstack([tmp, aux]) 
-    #A_pl = np.vstack([tmp, np.eye(4 * T * N + 2 * T)]) # variables are positive
     A_pl = np.vstack([tmp, np.eye(len(ma))])
-
-    #b = np.hstack([np.zeros(N_1), -pb, -ps, np.zeros(4 * T * N + 2 * T) ]) 
     b = np.hstack([np.zeros(N_1), -pb, -ps, np.zeros(len(ma)) ]) 
-    #G = np.eye(A.shape[0])
+
     return A_pl, b, ma
         
 

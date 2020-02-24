@@ -3,7 +3,7 @@ from src.player import Player
 from src.game import Game
 
 T = 48
-N = 50
+N = 20
 
 player_list = []
 for n in range(N):

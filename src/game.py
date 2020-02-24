@@ -1,7 +1,7 @@
 import numpy as np
 from src.player import Player
 from src.utils import powerset
-from src.build import solve_centralized, extract_core_payment
+from src.build import solve_centralized, extract_core_payment, to_matrix_form
 
 
 class Game(object):
@@ -25,6 +25,11 @@ class Game(object):
         self._payoff_core = None
         self._res = None
         self._valfunc = None
+        
+        A,b,c = to_matrix_form(self)
+        self.A = A
+        self.b = b
+        self.c = c
 
     def solve(self):
         if self._model is None:
