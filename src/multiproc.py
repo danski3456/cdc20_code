@@ -12,6 +12,8 @@ class Agent(object):
     def __init__(self, n, game, alpha):
 
         C, b, ma = build_proyection_player(n, game)
+        T = game.T
+        N = game.N
         self.n = n
         self.C = C
         self.b = b
@@ -19,8 +21,9 @@ class Agent(object):
         self.N = game.N
         self.T = game.T
         self.alpha = alpha
+        self.ws = np.zeros(4 * T * N + 2 * T)
+        self.xs = np.zeros(4 * T * N + 2 * T)
 
-        T = game.T
         pl = game._player_list[n]
         self.grad = np.hstack([
             np.ones(T) * pl._sm - pl._s0,
@@ -30,29 +33,33 @@ class Agent(object):
             np.ones(T) * (- pl._x),
         ])
         
-    def update(self, xs, ws, xs_new):
-        tmp = xs[self.n].copy()
+    def update(self, xs):
+        tmp = self.xs.copy()
         tmp[self.ma] -= self.alpha * self.grad
-        tmp -= self.alpha * ws[self.n]
+        tmp -= self.alpha * self.ws
         for n_ in range(self.N):
             if n_ != self.n:
-                tmp -= self.alpha * (xs[self.n] - xs[n_])
+                tmp -= self.alpha * (self.xs - xs[n_])
 
         new_x = tmp.copy()
         sol = proyect_into_linear(tmp[self.ma], self.C, self.b)
         new_x[self.ma] = sol[0]
 
-        xs_new[self.n] = new_x 
-        return new_x
+        self.xs = new_x
 
-    def update_w(self, xs, ws):
+        return self.xs
+
+    def update_w(self, xs):
         n = self.n 
         for n_ in range(N):
             if n != n_:
-                ws[n] += xs[n] - xs[n_]
+                self.ws += self.xs - xs[n_]
 
-    def update_old(self, xs_old, xs_new):
-        xs_old[self.n] = xs_new[self.n]
+    #def update_old(self, xs_old, xs_new):
+    #    xs_old[self.n] = xs_new[self.n]
+
+    def print_cost(self):
+        return np.inner(self.xs[self.ma], self.grad)
          
 
 ALPHA = (1 / (N + 5))
@@ -64,34 +71,22 @@ for n in range(N):
     agents.append(ag)
     
 
-ws = [np.zeros(n_vars) for _ in range(N)]
 xs = [np.zeros(n_vars) for _ in range(N)]
-xs_new = [np.zeros(n_vars) for _ in range(N)]
 
 xs_id = ray.put(xs)
-ws_id = ray.put(ws)
 
-for i in range(30):
+d1 = np.hstack(xs)
 
+for i in range(1000):
     start = time.time()    
-    fut = [ag.update.remote(xs_id, ws_id) for ag in agents]
-    xs_ = ray.get(fut)
-    d2 = np.hstack(xs_).copy()
-    xs_id = ray.put(xs_)
-    
+    fut = [ag.update.remote(xs_id) for ag in agents]
+    xs_id = ray.get(fut)
+    d2 = np.hstack(xs_id).copy()
+    print(i, np.linalg.norm(d1 - d2), time.time() - start)
+    d1 = d2.copy()
+    fut2 = [ag.update_w.remote(xs_id) for ag in agents]
 
 
-
-    for n in range(N):
-        for n_ in range(N):
-            if n != n_:
-                ws[n] += xs_[n] - xs_[n_]
-    ws_id = ray.put(ws)
-    d1 = d2
-    print(i, time.time() - start, np.linalg.norm(d1 - d2))
-
-
-
-        
+ray.get([ag.print_cost.remote() for ag in agents])        
 
 

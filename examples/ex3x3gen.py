@@ -3,6 +3,7 @@ from src.player import Player
 from src.game import Game
 
 T = 3
+N = 4
 
 p4 = Player(x=np.array([0, 1, 0]),
             sm = 10,

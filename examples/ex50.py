@@ -2,8 +2,8 @@ import numpy as np
 from src.player import Player
 from src.game import Game
 
-T = 48
-N = 20
+T = 20
+N = 10
 
 player_list = []
 for n in range(N):
