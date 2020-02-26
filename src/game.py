@@ -31,7 +31,7 @@ class Game(object):
         
         L = nx.laplacian_matrix(G).A
         ev = np.linalg.eigvals(L)
-        self.alpha = 1 / (max(ev) * 1.1)
+        self.alpha = float(1 / (max(ev) * 1.1))
         
         A,b,c = to_matrix_form(self)
         self.A = A
