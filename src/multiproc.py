@@ -2,14 +2,13 @@ import ray
 import time
 from src.build import *
 from src.proyection import proyect_into_linear
-from examples.ex50 import g, N, T
+#from examples.ex3x3gen import g, N, T
 
-ray.init()
 
 @ray.remote
 class Agent(object):
     
-    def __init__(self, n, game, alpha):
+    def __init__(self, n, game):
 
         C, b, ma = build_proyection_player(n, game)
         T = game.T
@@ -20,7 +19,8 @@ class Agent(object):
         self.ma = ma
         self.N = game.N
         self.T = game.T
-        self.alpha = alpha
+        self.alpha = game.alpha
+        self.neighbors = list(game.G.neighbors(n))
         self.ws = np.zeros(4 * T * N + 2 * T)
         self.xs = np.zeros(4 * T * N + 2 * T)
 
@@ -37,9 +37,10 @@ class Agent(object):
         tmp = self.xs.copy()
         tmp[self.ma] -= self.alpha * self.grad
         tmp -= self.alpha * self.ws
-        for n_ in range(self.N):
-            if n_ != self.n:
-                tmp -= self.alpha * (self.xs - xs[n_])
+        #for n_ in range(self.N):
+        for n_ in self.neighbors:
+            #if n_ != self.n:
+            tmp -= self.alpha * (self.xs - xs[n_])
 
         new_x = tmp.copy()
         sol = proyect_into_linear(tmp[self.ma], self.C, self.b)
@@ -51,42 +52,57 @@ class Agent(object):
 
     def update_w(self, xs):
         n = self.n 
-        for n_ in range(N):
-            if n != n_:
-                self.ws += self.xs - xs[n_]
+        for n_ in self.neighbors:
+        #for n_ in range(N):
+            #if n != n_:
+            self.ws += self.xs - xs[n_]
 
     #def update_old(self, xs_old, xs_new):
     #    xs_old[self.n] = xs_new[self.n]
 
     def print_cost(self):
         return np.inner(self.xs[self.ma], self.grad)
+
+    def print_neighbors(self):
+        print(self,n, self.neighbors)
          
 
-ALPHA = (1 / (N + 5))
-n_vars = 4 * T * N + 2 * T
+def run_distributed(game, max_iters=10000, tol=1e-5, outfile=None):
 
-agents = []
-for n in range(N):
-    ag = Agent.remote(n, g, ALPHA)
-    agents.append(ag)
-    
+    ray.init()
 
-xs = [np.zeros(n_vars) for _ in range(N)]
+    N = game.N
+    T = game.T
+    n_vars = 4 * T * N + 2 * T
 
-xs_id = ray.put(xs)
+    agents = []
+    for n in range(N):
+        ag = Agent.remote(n, game)
+        agents.append(ag)
 
-d1 = np.hstack(xs)
+    xs = [np.zeros(n_vars) for _ in range(N)]
+    xs_id = ray.put(xs)
 
-for i in range(1000):
-    start = time.time()    
-    fut = [ag.update.remote(xs_id) for ag in agents]
-    xs_id = ray.get(fut)
-    d2 = np.hstack(xs_id).copy()
-    print(i, np.linalg.norm(d1 - d2), time.time() - start)
-    d1 = d2.copy()
-    fut2 = [ag.update_w.remote(xs_id) for ag in agents]
+    iteration_times = np.zeros(max_iters)
+
+    for i in range(max_iters):
+        start = time.time()    
+        fut = [ag.update.remote(xs_id) for ag in agents]
+        xs_id = ray.get(fut)
+        if i % 50 == 0:
+            if np.allclose(0,
+                np.diff(np.vstack(xs_id).reshape(N, -1), axis=0),
+                atol=tol):
+                break
+        fut2 = [ag.update_w.remote(xs_id) for ag in agents]
+        iteration_times[i] = time.time() - start
 
 
-ray.get([ag.print_cost.remote() for ag in agents])        
+    final_costs = ray.get([ag.print_cost.remote() for ag in agents])        
+
+    ray.shutdown()
+
+    if outfile is None:
+        return final_costs, iteration_times
 
 

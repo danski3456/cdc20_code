@@ -1,9 +1,11 @@
 import numpy as np
+import networkx as nx
 from src.player import Player
 from src.game import Game
 
 T = 3
 N = 4
+G = nx.path_graph(N)
 
 p4 = Player(x=np.array([0, 1, 0]),
             sm = 10,
@@ -39,6 +41,6 @@ player_list = [p1, p2, p3, p4]
 buying_price = np.ones(T) * 3
 selling_price = np.ones(T) * 1
 
-g = Game(player_list, buying_price, selling_price)
+g = Game(player_list, buying_price, selling_price, G)
 
 m = g.solve()

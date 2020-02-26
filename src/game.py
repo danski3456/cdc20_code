@@ -1,4 +1,5 @@
 import numpy as np
+import networkx as nx
 from src.player import Player
 from src.utils import powerset
 from src.build import solve_centralized, extract_core_payment, to_matrix_form
@@ -8,7 +9,7 @@ class Game(object):
 
     """This is a base class for the coopearative game"""
 
-    def __init__(self, player_list, buying_price, selling_price):
+    def __init__(self, player_list, buying_price, selling_price, G):
         """TODO: to be defined.
 
         :player_list: TODO
@@ -25,6 +26,12 @@ class Game(object):
         self._payoff_core = None
         self._res = None
         self._valfunc = None
+
+        self.G = G
+        
+        L = nx.laplacian_matrix(G).A
+        ev = np.linalg.eigvals(L)
+        self.alpha = 1 / (max(ev) * 1.1)
         
         A,b,c = to_matrix_form(self)
         self.A = A
