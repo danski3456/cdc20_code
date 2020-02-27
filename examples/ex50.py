@@ -1,9 +1,11 @@
 import numpy as np
+import networkx as nx
 from src.player import Player
 from src.game import Game
 
-T = 20
+T = 48
 N = 10
+G = nx.complete_graph(N)
 
 player_list = []
 for n in range(N):
@@ -19,6 +21,6 @@ for n in range(N):
 buying_price = np.ones(T) * 3
 selling_price = np.ones(T) * 1
 
-g = Game(player_list, buying_price, selling_price)
+g = Game(player_list, buying_price, selling_price, G)
 
 m = g.solve()
