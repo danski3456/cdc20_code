@@ -1,5 +1,7 @@
 import ray
 import time
+import numpy as np
+import scipy as sp
 from src.build import *
 from src.proyection import proyect_into_linear
 #from examples.ex3x3gen import g, N, T
@@ -67,7 +69,7 @@ class Agent(object):
         print(self,n, self.neighbors)
          
 
-def run_distributed(game, max_iters=10000, tol=1e-5, outfile=None):
+def run_distributed(game, max_iters=10000, tol=1e-7):
 
     ray.init()
 
@@ -85,16 +87,25 @@ def run_distributed(game, max_iters=10000, tol=1e-5, outfile=None):
 
     iteration_times = np.zeros(max_iters)
 
+    iteration_data = []
+
     for i in range(max_iters):
         start = time.time()    
         fut = [ag.update.remote(xs_id) for ag in agents]
         xs_id = ray.get(fut)
+
+        preserve = np.vstack(xs_id).copy()
+        preserve = sp.sparse.csc_matrix(preserve)
+        iteration_data.append(preserve)
+        
         if i % 50 == 0:
             if np.allclose(0,
                 np.diff(np.vstack(xs_id).reshape(N, -1), axis=0),
                 atol=tol):
                 break
+        #xs_id = ray.put(fut)
         fut2 = [ag.update_w.remote(xs_id) for ag in agents]
+        _ = ray.get(fut2)
         iteration_times[i] = time.time() - start
 
 
@@ -102,7 +113,6 @@ def run_distributed(game, max_iters=10000, tol=1e-5, outfile=None):
 
     ray.shutdown()
 
-    if outfile is None:
-        return final_costs, iteration_times
+    return final_costs, iteration_times, i, iteration_data
 
 
