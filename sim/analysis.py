@@ -38,3 +38,4 @@ for k in games:
 
 df = pd.DataFrame(data)
 df.columns = ['game', 'N', 'T', 'centralized', 'valfunc', 'distributed', 'iterations']
+df = df.sort_values(['N', 'iterations'])
