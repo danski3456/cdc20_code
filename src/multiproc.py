@@ -71,7 +71,7 @@ class Agent(object):
 
 def run_distributed(game, max_iters=10000, tol=1e-7):
 
-    ray.init()
+    ray.init(include_webui=False)
 
     N = game.N
     T = game.T

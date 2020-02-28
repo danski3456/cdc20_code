@@ -45,5 +45,6 @@ def run_sim(N, T, graph, reps, allcoal=True, distalg=True):
 run_sim(6, 4, 'wheel', 5)
 run_sim(8, 4, 'wheel', 5)
 run_sim(10, 4, 'wheel', 5)
-run_sim(10, 4, 'complete', 5)
+run_sim(10, 4, 'complete', 5, allcoal=False)
+run_sim(12, 4, 'complete', 5)
 
