@@ -17,6 +17,7 @@ outdir = str(outdir)
 def run_sim(N, T, graph, reps, allcoal=True, distalg=True):
     start = time.time()
     for i in range(reps):
+        print('Processing graph {0} out of {1}'.format(i, reps))
         g = generate_random_uniform(N, T, graph, i * 10)
 
         ex = game_exists(g, outdir)
