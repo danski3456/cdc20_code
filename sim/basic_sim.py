@@ -41,11 +41,22 @@ def run_sim(N, T, graph, reps, allcoal=True, distalg=True):
     end = time.time()
     print('Elapsed time with {0} {1} {2}: {3:0.2f}'.format(N, T, graph, end - start))
 
-### First round
+### First round finding the core in the naive way
 
-run_sim(6, 4, 'wheel', 5)
-run_sim(8, 4, 'wheel', 5)
-run_sim(10, 4, 'wheel', 5)
-run_sim(10, 4, 'complete', 5, allcoal=False)
-run_sim(12, 4, 'complete', 5)
+for N in [6, 8, 10, 12, 14]:
+    try:
+        run_sim(N, 48, 'complete', 10)
+    except Exception as e:
+        print(e)
+
+
+### Testing different topologies
+
+for topo in ['complete', 'path', 'cycle', 'regular', 'wheel']:
+    for N in [10, 30, 50, 70]:
+        try:
+            run_sim(N, 48, topo, 10, allcoal=False)
+        except Exception as e:
+            print(e)
+            
 
