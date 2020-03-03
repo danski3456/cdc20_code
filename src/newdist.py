@@ -149,29 +149,51 @@ def main_dist(g):
     #print(i, xs[0] - EXACT, xs[1] - EXACT)
     #print('-' * 20)
 
+if __name__ == '__main__':
+    import sys
+    import time
 
-TEST = [
-    generate_random_uniform(5, 4, 'complete', 666),
-    generate_random_uniform(5, 4, 'complete', 12345),
-    generate_random_uniform(5, 4, 'complete', 1),
-    generate_random_uniform(5, 15, 'complete', 666),
-    generate_random_uniform(5, 15, 'complete', 12345),
-    generate_random_uniform(5, 15, 'complete', 1),
-    generate_random_uniform(10, 4, 'complete', 12345),
-    generate_random_uniform(10, 4, 'complete', 1),
-    generate_random_uniform(10, 15, 'complete', 12345),
-    generate_random_uniform(10, 15, 'complete', 1),
-    generate_random_uniform(10, 4, 'complete', 666),
-    generate_random_uniform(10, 15, 'complete', 666),
-    generate_random_uniform(20, 15, 'complete', 2210),
-    generate_random_uniform(20, 15, 'complete', 1312),
-]
-for t in TEST: t.init()
+    if len(sys.argv) < 5:
+        sys.exit()
+    N = int(sys.argv[1])
+    T = int(sys.argv[2])
+    G = sys.argv[3].strip()
+    seed = int(sys.argv[4])
+    print(N, T, G, seed)
 
-for i, g in enumerate(TEST):
-
+    start = time.time()
+    g = generate_random_uniform(N, T, G, seed)
+    g.init()
     x, gr = main_dist(g)
+    end = time.time()
+    print('Elapsed time', round(end - start, 4))
     costs = np.sum(x * gr, axis=1)
     pc = g.get_payoff_core()
-    print(i, 'Distance algorithm-core: ', np.linalg.norm(costs - pc))
+    print('Distance algorithm-core: ', np.linalg.norm(costs - pc))
     print('ASSERT CLOSE:', np.allclose(costs, pc, atol=1e-8))
+
+#TEST = [
+#    generate_random_uniform(5, 4, 'complete', 666),
+#    generate_random_uniform(5, 4, 'complete', 12345),
+#    generate_random_uniform(5, 4, 'complete', 1),
+#    generate_random_uniform(5, 15, 'complete', 666),
+#    generate_random_uniform(5, 15, 'complete', 12345),
+#    generate_random_uniform(5, 15, 'complete', 1),
+#    generate_random_uniform(10, 4, 'complete', 12345),
+#    generate_random_uniform(10, 4, 'complete', 1),
+#    generate_random_uniform(10, 15, 'complete', 12345),
+#    generate_random_uniform(10, 15, 'complete', 1),
+#    generate_random_uniform(10, 4, 'complete', 666),
+#    generate_random_uniform(10, 15, 'complete', 666),
+#    generate_random_uniform(20, 15, 'complete', 2210),
+#    generate_random_uniform(20, 15, 'complete', 1312),
+#]
+#for t in TEST: t.init()
+#
+#for i, g in enumerate(TEST):
+#
+#    x, gr = main_dist(g)
+#    costs = np.sum(x * gr, axis=1)
+#    pc = g.get_payoff_core()
+#    print(i, 'Distance algorithm-core: ', np.linalg.norm(costs - pc))
+#    print('ASSERT CLOSE:', np.allclose(costs, pc, atol=1e-8))

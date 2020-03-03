@@ -10,3 +10,5 @@ sftp-fake:
 	rsync -anv --exclude-from=".syncignore" $(PWD) lame23:/home/infres/dkiedanski
 sftp:
 	rsync -av --exclude-from=".syncignore" $(PWD) lame23:/home/infres/dkiedanski
+run-sim:
+	< sim/params1.csv | parallel -C, --header : "venv/bin/python src/newdist.py {N} {T} {G} {S} > sim/{N}_{T}_{G}_{S}.out"
