@@ -260,7 +260,7 @@ def build_proyection_player(n, game):
     ma = np.where(np.abs(tmp).sum(axis=0) != 0)[0]
     tmp = tmp[:, ma]
     A_pl = np.vstack([tmp, np.eye(len(ma))])
-    b = np.hstack([np.zeros(N_1), -pb, -ps, np.zeros(len(ma)) ]) 
+    b = np.hstack([np.zeros(N_1), -pb, ps, np.zeros(len(ma)) ]) 
 
     return A_pl, b, ma
         
