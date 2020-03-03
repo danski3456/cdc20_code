@@ -229,7 +229,7 @@ def to_matrix_form(g):
 
     c = np.hstack([
         -pb,
-        -ps,
+        ps,
         np.zeros(2 * N * T)
     ])
 
