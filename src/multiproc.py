@@ -48,9 +48,10 @@ class Agent(object):
         sol = proyect_into_linear(tmp[self.ma], self.C, self.b)
         new_x[self.ma] = sol[0]
 
+        dis = np.linalg.norm(new_x - self.xs)
         self.xs = new_x
 
-        return self.xs
+        return self.xs, dis
 
     def update_w(self, xs):
         n = self.n 
@@ -69,9 +70,14 @@ class Agent(object):
         print(self,n, self.neighbors)
          
 
-def run_distributed(game, max_iters=10000, tol=1e-7):
+def run_distributed(game, max_iters=15000, tol=1e-7):
 
-    ray.init(include_webui=False)
+    ray.init(
+        include_webui=False,
+#        memory=4000 * 1024 * 1024,
+#        object_store_memory=4000 * 1024 * 1024,
+#        driver_object_store_memory=100 * 1024 * 1024)
+    )
 
     N = game.N
     T = game.T
@@ -87,22 +93,29 @@ def run_distributed(game, max_iters=10000, tol=1e-7):
 
     iteration_times = np.zeros(max_iters)
 
-    iteration_data = []
+    #iteration_data = []
 
     for i in range(max_iters):
         start = time.time()    
         fut = [ag.update.remote(xs_id) for ag in agents]
         xs_id = ray.get(fut)
 
-        preserve = np.vstack(xs_id).copy()
-        preserve = sp.sparse.csc_matrix(preserve)
-        iteration_data.append(preserve)
+        xs_id, dist = zip(*xs_id)
+
+        mdis = max(dist)
+        if mdis < 1e-8:
+            break
+
+
+        #preserve = np.vstack(xs_id).copy()
+        #preserve = sp.sparse.csc_matrix(preserve)
+        #iteration_data.append(preserve)
         
-        if i % 50 == 0:
-            if np.allclose(0,
-                np.diff(np.vstack(xs_id).reshape(N, -1), axis=0),
-                atol=tol):
-                break
+        #if i % 50 == 0:
+        #    if np.allclose(0,
+        #        np.diff(np.vstack(xs_id).reshape(N, -1), axis=0),
+        #        atol=tol):
+        #        break
         #xs_id = ray.put(fut)
         fut2 = [ag.update_w.remote(xs_id) for ag in agents]
         _ = ray.get(fut2)
@@ -113,6 +126,26 @@ def run_distributed(game, max_iters=10000, tol=1e-7):
 
     ray.shutdown()
 
-    return final_costs, iteration_times, i, iteration_data
+    return final_costs, iteration_times, i
 
 
+if __name__ == '__main__':
+
+    ## 20, 24, complete -> 1137 s
+    ## 20, 10, complete -> 80s
+    
+    
+    from src.game import generate_random_uniform
+    g = generate_random_uniform(20, 10, 'complete', 6789)
+    g.init()
+    
+    start = time.time()
+    s = run_distributed(g)
+    end = time.time()
+    s_ = s[0]
+    pc = g.get_payoff_core()
+    dis = np.linalg.norm(s_ - pc)
+    elap = end - start
+    print('Distnace', dis.round(5), 'Time', round(elap, 5), 'Iterations', s[2])
+
+    

@@ -43,20 +43,23 @@ def run_sim(N, T, graph, reps, allcoal=True, distalg=True):
 
 ### First round finding the core in the naive way
 
-for N in [6, 8, 10, 12, 14]:
-    try:
-        run_sim(N, 48, 'complete', 10)
-    except Exception as e:
-        print(e)
-
+#for N in [6, 8, 10, 12, 14]:
+#    try:
+#        run_sim(N, 48, 'complete', 10)
+#    except Exception as e:
+#        print(e)
+#
 
 ### Testing different topologies
+for topo in ['complete', 'path', 'cycle', 'regular', 'wheel']:
+    run_sim(25, 10, topo, 2, allcoal=False)
 
 for topo in ['complete', 'path', 'cycle', 'regular', 'wheel']:
-    for N in [10, 30, 50, 70]:
-        try:
-            run_sim(N, 48, topo, 10, allcoal=False)
-        except Exception as e:
-            print(e)
+    run_sim(20, 10, topo, 5, allcoal=False)
+
+for topo in ['complete', 'path', 'cycle', 'regular', 'wheel']:
+    run_sim(10, 10, topo, 5, allcoal=False)
             
+for topo in ['complete', 'path', 'cycle', 'regular', 'wheel']:
+    run_sim(5, 10, topo, 5, allcoal=False)
 

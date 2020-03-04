@@ -54,10 +54,10 @@ for k in games:
 
 df = pd.DataFrame(data)
 df.columns = ['game', 'N', 'T', 'centralized', 'valfunc', 'distributed', 'iterations']
-df = df.sort_values(['N', 'iterations'])
+df['graphtype'] = df.game.map(lambda x: x[:-1].split('_')[-1])
+df = df.sort_values(['distributed', 'iterations'])
 
 df48 = df[df['T'] == 48].copy()
-df48['graphtype'] = df48.game.map(lambda x: x[:-1].split('_')[-1])
 df48m = pd.melt(df48, id_vars=['game', 'N'], value_vars=['centralized', 'valfunc', 'distributed']) 
 
 fig, ax = plt.subplots()
@@ -70,7 +70,7 @@ fig.show()
 
 
 fig, ax = plt.subplots()
-sns.lineplot(data=df48, x='N', y='distributed', hue='graphtype', ax=ax)
+sns.boxplot(data=df, x='N', y='distributed', hue='graphtype', ax=ax)
 ax.set_xlabel('Number of players')
 ax.set_ylabel('Elapsed time (seconds)')
 fig.show()
