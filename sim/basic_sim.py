@@ -50,16 +50,30 @@ def run_sim(N, T, graph, reps, allcoal=True, distalg=True):
 #        print(e)
 #
 
+TYPES = ['complete', 'path', 'cycle', 'regular', 'wheel', 'tree', 'chordal']
+
+for topo in TYPES:
+    run_sim(7, 10, topo, 5, allcoal=False)
+
+for topo in TYPES:
+    run_sim(11, 10, topo, 5, allcoal=False)
+
+for topo in TYPES:
+    run_sim(17, 10, topo, 5, allcoal=False)
+
+for topo in TYPES:
+    run_sim(23, 10, topo, 5, allcoal=False)
+
+for topo in TYPES:
+    run_sim(29, 10, topo, 5, allcoal=False)
+
+#for topo in TYPES:
+#    run_sim(20, 10, topo, 5, allcoal=False)
+
 ### Testing different topologies
-for topo in ['complete', 'path', 'cycle', 'regular', 'wheel']:
-    run_sim(25, 10, topo, 2, allcoal=False)
+#for topo in TYPES:
+#    run_sim(25, 10, topo, 2, allcoal=False)
 
-for topo in ['complete', 'path', 'cycle', 'regular', 'wheel']:
-    run_sim(20, 10, topo, 5, allcoal=False)
 
-for topo in ['complete', 'path', 'cycle', 'regular', 'wheel']:
-    run_sim(10, 10, topo, 5, allcoal=False)
             
-for topo in ['complete', 'path', 'cycle', 'regular', 'wheel']:
-    run_sim(5, 10, topo, 5, allcoal=False)
 

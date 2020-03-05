@@ -56,6 +56,8 @@ df = pd.DataFrame(data)
 df.columns = ['game', 'N', 'T', 'centralized', 'valfunc', 'distributed', 'iterations']
 df['graphtype'] = df.game.map(lambda x: x[:-1].split('_')[-1])
 df = df.sort_values(['distributed', 'iterations'])
+df =  df[~(df.graphtype == 'expander')]
+df = df[df.N % 2 != 0]
 
 df48 = df[df['T'] == 48].copy()
 df48m = pd.melt(df48, id_vars=['game', 'N'], value_vars=['centralized', 'valfunc', 'distributed']) 
@@ -67,11 +69,13 @@ ax.set_ylabel('Elapsed time (seconds)')
 ax.legend(['Centralized algorithm', 'Naive core computation', 'Distributed algorithm'])
 ax.set_title('Running time of the different methods to obtain a payoff in the core')
 fig.show()
+#fig.savefig(outdir / 'temp.pdf')
 
 
 fig, ax = plt.subplots()
-sns.boxplot(data=df, x='N', y='distributed', hue='graphtype', ax=ax)
+hueo = ['chordal', 'regular', 'cycle', 'complete', 'wheel', 'path', 'tree']
+sns.barplot(data=df, x='N', y='distributed', hue='graphtype', ax=ax,
+hue_order=hueo)
 ax.set_xlabel('Number of players')
 ax.set_ylabel('Elapsed time (seconds)')
 fig.show()
-fig.savefig(outdir / 'temp.pdf')

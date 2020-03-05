@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 import networkx as nx
 from src.player import Player
-from src.utils import powerset
+from src.utils import powerset, smallest_prime
 from src.build import solve_centralized, extract_core_payment, to_matrix_form
 
 
@@ -125,6 +125,8 @@ def generate_random_uniform(N, T, G_method, seed=1234):
         'cycle': nx.cycle_graph(N),
         'regular': nx.random_regular_graph(N_, N, seed=rng),
         'wheel': nx.wheel_graph(N),
+        'tree': nx.random_tree(N, seed=rng),
+        'chordal': nx.Graph(nx.chordal_cycle_graph(N)),
     }
     G = switcher.get(G_method)
 
