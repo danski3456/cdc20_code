@@ -38,8 +38,8 @@ class Game(object):
         self.time_get_valfunc = None
         
         L = nx.laplacian_matrix(G).A
-        ev = np.linalg.eigvals(L)
-        self.alpha = 1 / (np.absolute(ev).max() * 1.1)
+        ev = sorted(np.linalg.eigvals(L).real, reverse=True)
+        self.alpha = 1 / (ev[0] * 1.1)
         
     def init(self):
         A,b,c = to_matrix_form(self)

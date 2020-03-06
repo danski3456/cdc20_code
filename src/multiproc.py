@@ -73,7 +73,7 @@ class Agent(object):
 def run_distributed(game, max_iters=15000, tol=1e-7):
 
     ray.init(
-        include_webui=False,
+        include_webui=True,
 #        memory=4000 * 1024 * 1024,
 #        object_store_memory=4000 * 1024 * 1024,
 #        driver_object_store_memory=100 * 1024 * 1024)
@@ -90,6 +90,8 @@ def run_distributed(game, max_iters=15000, tol=1e-7):
 
     xs = [np.zeros(n_vars) for _ in range(N)]
     xs_id = ray.put(xs)
+
+#    time.sleep(2000)
 
     iteration_times = np.zeros(max_iters)
 
@@ -136,7 +138,7 @@ if __name__ == '__main__':
     
     
     from src.game import generate_random_uniform
-    g = generate_random_uniform(20, 10, 'complete', 6789)
+    g = generate_random_uniform(50, 5, 'complete', 6789)
     g.init()
     
     start = time.time()

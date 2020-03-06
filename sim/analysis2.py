@@ -1,5 +1,6 @@
 import dill
 import numpy as np
+import networkx as nx
 import scipy as sp
 import pandas as pd
 import seaborn as sns
@@ -31,55 +32,47 @@ for gf in dist_files:
     id_ = os.path.basename(gf).split('_')[0]
     dists[id_] = data
 
+data = []
 for i, k in enumerate(games.keys()):
     g = games[k]
     if k in dists:
         d = dists[k]
         pc = g.get_payoff_core()
         di = d[0]
-        err = np.linalg.norm(pc - di)
-        if err > 1e-4:
-            print(i, g.N, g.T, g.graphtype, d[2], (err /
-            np.linalg.norm(pc)).round(4))
-            print(di, pc)
-            break
-    else:
-        print(i, g.N, g.T, g.graphtype)
-
-data = []
-for k in games:
-    gm = games[k] 
-    if k in dists:
-        dis = dists[k]
-    else:
-        dis = (None, None)
-    partial = gm + dis
-    data.append(partial)
+        distime = d[1].sum()
+        A = nx.adj_matrix(g.G).A
+        eg = sorted(np.linalg.eigvals(A).real, reverse=True) 
+        eg2 = nx.linalg.spectrum.normalized_laplacian_spectrum(g.G)
+        N, T, gt, alpha = g.N, g.T, g.graphtype, g.alpha
+        sg = 1 / np.sqrt(eg2[1])
+        sg2 = eg2[-1] - eg2[-2]
+        if gt != 'expander':
+            err = np.linalg.norm(pc - di)
+            tup = (N, T, gt, distime, err, alpha, eg[0], eg[1], sg, sg2)
+            if N in [5 ,7, 11, 13, 17, 19, 23, 29, 31]:
+                data.append(tup)
 
 df = pd.DataFrame(data)
-df.columns = ['game', 'N', 'T', 'centralized', 'valfunc', 'distributed', 'iterations']
-df['graphtype'] = df.game.map(lambda x: x[:-1].split('_')[-1])
-df = df.sort_values(['distributed', 'iterations'])
-df =  df[~(df.graphtype == 'expander')]
-df = df[df.N % 2 != 0]
+df.columns = ['N', 'T', 'graph', 'time', 'error', 'alpha', 'eg1', 'eg2', 'sg',
+'sg2']
+df['gap'] = 1 / (df['eg1'] - df['eg2'])
+df = df.sort_values(['N', 'graph'])
 
-df48 = df[df['T'] == 48].copy()
-df48m = pd.melt(df48, id_vars=['game', 'N'], value_vars=['centralized', 'valfunc', 'distributed']) 
+sgap = pd.pivot_table(df, index='N', columns='graph', values='sg')
+sgap
 
-fig, ax = plt.subplots()
-sns.lineplot(data=df48m, x='N', y='value', hue='variable', ax=ax)
-ax.set_xlabel('Number of players')
-ax.set_ylabel('Elapsed time (seconds)')
-ax.legend(['Centralized algorithm', 'Naive core computation', 'Distributed algorithm'])
-ax.set_title('Running time of the different methods to obtain a payoff in the core')
-fig.show()
-#fig.savefig(outdir / 'temp.pdf')
+sgap3 = pd.pivot_table(df, index='N', columns='graph', values='sg2')
+sgap3
 
+sgap2 = pd.pivot_table(df, index='N', columns='graph', values='gap')
+sgap2
 
-fig, ax = plt.subplots()
-hueo = ['chordal', 'regular', 'cycle', 'complete', 'wheel', 'path', 'tree']
-sns.barplot(data=df, x='N', y='distributed', hue='graphtype', ax=ax,
-hue_order=hueo)
+fig, ax = plt.subplots(figsize=(14, 10))
+hueo = ['regular', 'chordal', 'cycle', 'complete', 'wheel', 'tree', 'path']
+sns.barplot(data=df, x='N', y='time', hue='graph', ax=ax, hue_order=hueo)
 ax.set_xlabel('Number of players')
 ax.set_ylabel('Elapsed time (seconds)')
 fig.show()
+fig.savefig(outdir / 'compare_topo.pdf')
+
+
