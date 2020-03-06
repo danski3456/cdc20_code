@@ -169,16 +169,16 @@ def main_dist(g):
 #        costs = np.sum(xs * grads, axis=1)
 #        costs_ = np.sum(xs_ * grads, axis=1)
         dis = np.linalg.norm(xs - xs_)
-        if i % 50 == 0:
-            print(i, dis)
+        #if i % 50 == 0:
+        #    print(i, dis)
         if dis < 1e-5:
             print('Exit, ', i)
             break
         xs = xs_
         end_iter = time.time()
-        print('End iter', round(end_iter - start_iter, 4))
+#        print('End iter', round(end_iter - start_iter, 4))
             
-    print('Round exited', i)
+#    print('Round exited', i)
     return xs, grads
 
         #diff = np.diff(np.vstack(xs).reshape(N, -1), axis=0)
@@ -194,6 +194,7 @@ def main_dist(g):
 if __name__ == '__main__':
     import sys
     import time
+    import pickle
 
     if len(sys.argv) < 5:
         sys.exit()
@@ -217,6 +218,10 @@ if __name__ == '__main__':
     print('Distance algorithm-core rel: ', np.linalg.norm(costs - pc) /
     np.linalg.norm(costs))
     print('ASSERT CLOSE:', np.allclose(costs, pc, atol=1e-8))
+    data = [g, x, gr, end - start, costs, pc]
+    with open('/home/infres/dkiedanski/' + '{}_{}_{}_{}.pkl'.format(N, T, G,
+    seed), 'wb') as fh:
+        pickle.dump(data, fh)
 
 #TEST = [
 #    generate_random_uniform(5, 4, 'complete', 666),

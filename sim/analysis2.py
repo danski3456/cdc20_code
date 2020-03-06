@@ -15,6 +15,8 @@ from pathlib import Path
 
 from sim.constants import OUTDIR
 
+OUTDIR = 'Outputs/cdc_3'
+
 outdir = Path.home() / OUTDIR
 
 game_files = outdir.glob('*_game.pkl')
