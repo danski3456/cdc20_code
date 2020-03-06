@@ -10,9 +10,9 @@ from src.proyection import proyect_into_linear
 @ray.remote
 class Agent(object):
     
-    def __init__(self, n, game):
+    def __init__(self, n, game, C, b, ma):
 
-        C, b, ma = build_proyection_player(n, game)
+#        C, b, ma = build_proyection_player(n, game)
         T = game.T
         N = game.N
         self.n = n
@@ -45,6 +45,7 @@ class Agent(object):
             tmp -= self.alpha * (self.xs - xs[n_])
 
         new_x = tmp.copy()
+        print(tmp[self.ma].shape, self.C.shape, self.b.shape)
         sol = proyect_into_linear(tmp[self.ma], self.C, self.b)
         new_x[self.ma] = sol[0]
 
@@ -83,9 +84,19 @@ def run_distributed(game, max_iters=15000, tol=1e-7):
     T = game.T
     n_vars = 4 * T * N + 2 * T
 
+    mas = []
+    C, b, ma_ = build_proyection_player(0, game)
+    mas.append(ma_)
+    for i in range(1, N):
+        _, _, ma = build_proyection_player(i, game)
+        mas.append(ma)
+
+    C_id = ray.put(C)
+    b_id = ray.put(b)
+
     agents = []
     for n in range(N):
-        ag = Agent.remote(n, game)
+        ag = Agent.remote(n, game, C_id, b_id, mas[n])
         agents.append(ag)
 
     xs = [np.zeros(n_vars) for _ in range(N)]
@@ -138,7 +149,7 @@ if __name__ == '__main__':
     
     
     from src.game import generate_random_uniform
-    g = generate_random_uniform(50, 5, 'complete', 6789)
+    g = generate_random_uniform(50, 48, 'complete', 6789)
     g.init()
     
     start = time.time()

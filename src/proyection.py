@@ -17,6 +17,8 @@ def proyect_into_linear(x, A, b):
     return sol
      
 
+
+
 if __name__ == '__main__':
     A1 = np.array([
         [1, 0],
