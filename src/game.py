@@ -9,6 +9,7 @@ import networkx as nx
 from src.player import Player
 from src.utils import powerset, smallest_prime
 from src.build import solve_centralized, extract_core_payment, to_matrix_form
+from itertools import combinations
 
 
 class Game(object):
@@ -39,7 +40,7 @@ class Game(object):
         
         L = nx.laplacian_matrix(G).A
         ev = sorted(np.linalg.eigvals(L).real, reverse=True)
-        self.alpha = 1 / (ev[0] * 1.1)
+        self.alpha = 1 / (ev[0] * 1.2)
         
     def init(self):
         A,b,c = to_matrix_form(self)
@@ -66,6 +67,7 @@ class Game(object):
 
         return self._payoff_core
 
+
     def get_valfunc(self):
         if self._valfunc is None:
             start_ = time.time()
@@ -82,6 +84,17 @@ class Game(object):
             self.time_get_valfunc = end_ - start_
 
         return self._valfunc
+
+
+    def verify_core(self, payoff, i):
+        
+        for c in combinations(range(self.N), i):
+            pl = [self._player_list[c_] for c_ in c]
+            sc = solve_centralized(pl, self._buying_price, self._selling_price)
+            val = sc[0].objective.value()
+            p_pay = np.sum([payoff[c_] for c_ in c])
+            print(c, p_pay > val, p_pay.round(3), val.round(3))
+        
 
     def __str__(self):
         

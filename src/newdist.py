@@ -11,6 +11,7 @@ from scipy import sparse
 
 
 
+
     
 
 def proyect_into_set(x, n, C_, b_, ma_):
@@ -49,58 +50,11 @@ def alpha(k):
     return 1 / N
 
 
-def iterate_player(n_list, xs, vs, grads, mas, ap, Cs, bs, A):
-    prs = []
-    for n in n_list:
-        tmp = xs[n, :].copy()
-        tmp -= ap * vs[n] 
-        tmp -= ap * grads[n]
+def get_grads(g):
 
-        tmp -= ap * np.dot(A[n], xs[n] - xs)
-        #for neig in range(N):
-        #    if neig != n:
-        #        tmp -= ap * A[n, neig] * (xs[n, :] - xs[neig, :])
-
-    #            if n != 0:
-        pr = proyect_into_set(tmp, n, Cs, bs, mas[n])
-        prs.append((n, pr))
-
-    return prs
-
-def main_dist(g):
-
-    N = g.N
-    T = g.T
+    N, T = g.N, g.T
     cons = list(g._model.constraints)
     M = len(cons)
-
-    Cs, bs, mas = [], [], []
-    for n in range(N):
-        C_, b_, ma_ = build_proyection_player(n, g)
-        Cs.append(C_)
-        bs.append(b_)
-        mas.append(ma_)
-
-    #Cs = Cs[0]
-    #bs = bs[0]
-    C = Cs[0]
-    n, m = C.shape
-    b = bs[0]
-
-
-
-
-    #c_proy = np.hstack([g.c, np.zeros(M)]).copy()
-    #A_proy = np.vstack([g.A.T, np.eye(M)]).copy()
-
-    P = sparse.csc_matrix(np.eye(m))
-    q = -np.ones(m) * 1.0
-    A = sparse.csc_matrix(C)
-    l = b * 1.0
-    u = np.ones(n) * np.inf
-    prob = osqp.OSQP()
-    _ = prob.setup(P, q, A, l, u=u, alpha=1.0, verbose=False, eps_abs=1e-12)
-
     grads = np.zeros((N, M))
     for n in range(N):
         pl = g._player_list[n]
@@ -123,18 +77,49 @@ def main_dist(g):
                     grads[n, i] = -pl._x[int(c_[-1])]
 
     assert np.allclose(g.b, grads.sum(axis=0))
+    return grads
 
-    ITERS = 5000
+def main_dist(g):
+
+    N = g.N
+    T = g.T
+    cons = list(g._model.constraints)
+    M = len(cons)
+
+    Cs, bs, mas = [], [], []
+    for n in range(N):
+        C_, b_, ma_ = build_proyection_player(n, g)
+        Cs.append(C_)
+        bs.append(b_)
+        mas.append(ma_)
+
+    C = Cs[0]
+    n, m = C.shape
+    b = bs[0]
+
+    grads = get_grads(g)
+
+    P = sparse.csc_matrix(np.eye(m))
+    q = -np.ones(m) * 1.0
+    A = sparse.csc_matrix(C)
+    l = b * 1.0
+    u = np.ones(n) * np.inf
+    PROYECTIONS = [osqp.OSQP() for _ in range(N)]
+    for p in PROYECTIONS:
+        _ = p.setup(P, q, A, l, u=u, alpha=1.0, verbose=False, eps_abs=1e-12)
+
+
+    ITERS = 10000
+    itertimes = np.zeros(ITERS)
     A = nx.adj_matrix(g.G).A
 
     xs = np.zeros((N, M))
     vs = np.zeros((N, M))
     ap = g.alpha
-
-    #return 0, 0
+    NE = [list(g.G.neighbors(n)) for n in range(N)]
 
     for i in range(1, ITERS):
-        start_iter = time.time()
+        start_iter = time.clock()
         new_xs = []
 
         for n in range(N):
@@ -143,108 +128,37 @@ def main_dist(g):
             tmp -= ap * vs[n] 
             tmp -= ap * grad(vs[n], n, grads)
 
-            tmp -= ap * np.dot(A[n], xs[n] - xs)
+            #tmp -= ap * np.dot(A[n], xs[n] - xs)
+            for neig in NE[n]:
+                tmp -= ap * A[n, neig] * (xs[n, :] - xs[neig, :])
 
 #            if n != 0:
             #start_ = time.time()
-            #pr = proyect_into_set(tmp, n, Cs, bs, mas[n])
             tmp_x = tmp.copy()
             tmp_ = tmp[mas[n]]
-            prob.update(q=-tmp_)
-            res = prob.solve()
+            #pr = proyect_into_set(tmp, n, C, b, mas[n])
+            PROYECTIONS[n].update(q=-tmp_)
+            res = PROYECTIONS[n].solve()
             np.put(tmp_x, mas[n], res.x)
-            #end_ = time.time()
-            #print('Pryection time', round((end_ - start_),5))
-#            else:
-#                pr = proyect_into_set(tmp, n, A_proy, c_proy, np.arange(A_proy.shape[1]))
-    #        assert 1 == 0
             new_xs.append(tmp_x)
+            #new_xs.append(pr)
 
         
         xs_ = np.vstack(new_xs)
+        #for n in range(N):
+        #    vs[n] += np.dot(A[n], xs_[n] - xs_)
+
         for n in range(N):
-            vs[n] += np.dot(A[n], xs_[n] - xs_)
+            for neig in NE[n]:
+                vs[n, :] += A[n, neig] * (xs_[n, :] - xs_[neig, :])
 
-
-#        costs = np.sum(xs * grads, axis=1)
-#        costs_ = np.sum(xs_ * grads, axis=1)
-        dis = np.linalg.norm(xs - xs_)
-        #if i % 50 == 0:
-        #    print(i, dis)
-        if dis < 1e-5:
+        
+        dis = np.linalg.norm(xs_ - xs, axis=1).max()
+        if dis < 1e-7:
             print('Exit, ', i)
             break
         xs = xs_
-        end_iter = time.time()
-#        print('End iter', round(end_iter - start_iter, 4))
+        end_iter = time.clock()
+        itertimes[i] = end_iter - start_iter
             
-#    print('Round exited', i)
-    return xs, grads
-
-        #diff = np.diff(np.vstack(xs).reshape(N, -1), axis=0)
-        #mdiff = diff.max()
-        #if i % 100 == 0:
-        #    print(i, mdiff)
-        #if mdiff < 1e-10:
-        #    return xs, grads
-            #break
-    #print(i, xs[0] - EXACT, xs[1] - EXACT)
-    #print('-' * 20)
-
-if __name__ == '__main__':
-    import sys
-    import time
-    import pickle
-
-    if len(sys.argv) < 5:
-        sys.exit()
-    N = int(sys.argv[1])
-    T = int(sys.argv[2])
-    G = sys.argv[3].strip()
-    seed = int(sys.argv[4])
-    print(N, T, G, seed)
-
-    start = time.time()
-    g = generate_random_uniform(N, T, G, seed)
-    g.init()
-    x, gr = main_dist(g)
-    end = time.time()
-    print('Elapsed time', round(end - start, 4))
-    costs = np.sum(x * gr, axis=1)
-    pc = g.get_payoff_core()
-    print('Dis payoff', costs.round(2))
-    print('True payoff', pc.round(2))
-    print('Distance algorithm-core: ', np.linalg.norm(costs - pc))
-    print('Distance algorithm-core rel: ', np.linalg.norm(costs - pc) /
-    np.linalg.norm(costs))
-    print('ASSERT CLOSE:', np.allclose(costs, pc, atol=1e-8))
-    data = [g, x, gr, end - start, costs, pc]
-    with open('/home/infres/dkiedanski/' + '{}_{}_{}_{}.pkl'.format(N, T, G,
-    seed), 'wb') as fh:
-        pickle.dump(data, fh)
-
-#TEST = [
-#    generate_random_uniform(5, 4, 'complete', 666),
-#    generate_random_uniform(5, 4, 'complete', 12345),
-#    generate_random_uniform(5, 4, 'complete', 1),
-#    generate_random_uniform(5, 15, 'complete', 666),
-#    generate_random_uniform(5, 15, 'complete', 12345),
-#    generate_random_uniform(5, 15, 'complete', 1),
-#    generate_random_uniform(10, 4, 'complete', 12345),
-#    generate_random_uniform(10, 4, 'complete', 1),
-#    generate_random_uniform(10, 15, 'complete', 12345),
-#    generate_random_uniform(10, 15, 'complete', 1),
-#    generate_random_uniform(10, 4, 'complete', 666),
-#    generate_random_uniform(10, 15, 'complete', 666),
-#    generate_random_uniform(20, 15, 'complete', 2210),
-#    generate_random_uniform(20, 15, 'complete', 1312),
-#]
-#for t in TEST: t.init()
-#
-#for i, g in enumerate(TEST):
-#
-#    x, gr = main_dist(g)
-#    costs = np.sum(x * gr, axis=1)
-#    pc = g.get_payoff_core()
-#    print(i, 'Distance algorithm-core: ', np.linalg.norm(costs - pc))
-#    print('ASSERT CLOSE:', np.allclose(costs, pc, atol=1e-8))
+    return xs, grads, itertimes, i
