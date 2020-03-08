@@ -30,7 +30,7 @@ for i, r in params.iterrows():
         with open(outdir / fn, 'rb') as fh: data = pickle.load(fh)
         params.loc[i, 'game'] = data[0]
         params.loc[i, 'time_dist'] = data[4]
-        params.loc[i, 'iter']] = data[-1]
+        params.loc[i, 'iters'] = data[-1]
     except:
         pass
 
@@ -41,11 +41,20 @@ params = params.sort_values(['N', 'time_dist'])
 params['time_cent'] = params.game.map(lambda x: x.time_solve_fast)
 
 
-hueo = ['complete', 'chordal', 'wheel', 'regular', 'cycle', 'path', 'tree']
+hueo = params[params.N == 23].groupby('G').time_dist.mean().sort_values().index.values
 fig, ax = plt.subplots(figsize=(14, 10))
 sns.barplot(data=params, x='N', y='time_dist', hue='G', ax=ax, hue_order=hueo)
 ax.set_xlabel('Number of players')
 ax.set_ylabel('Elapsed time (seconds)')
 fig.show()
+fig.savefig(outdir / 'elapsec.pdf')
 
+
+
+fig, ax = plt.subplots(figsize=(14, 10))
+sns.barplot(data=params, x='N', y='iters', hue='G', ax=ax)
+ax.set_xlabel('Number of players')
+ax.set_ylabel('Number of iterations before convergence')
+fig.show()
+fig.savefig(outdir / 'niters.pdf')
 
