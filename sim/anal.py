@@ -58,3 +58,118 @@ ax.set_ylabel('Number of iterations before convergence')
 fig.show()
 fig.savefig(outdir / 'niters.pdf')
 
+from string import Template
+
+figure1 = Template("""
+\\begin{tikzpicture}
+\\begin{axis}[
+x tick label style={
+/pgf/number format/1000 sep=},
+xtick={ $xtick },
+xticklabels={ $xtlabel },
+yticklabel style={
+        /pgf/number format/fixed,
+        /pgf/number format/precision=5
+},
+scaled y ticks=false,
+ylabel= $ylabel,
+xlabel= $xlabel,
+legend style={at={(0.5,-0.25)},
+anchor=north,legend columns=-1},
+ybar,
+bar width=2pt,
+ylabel near ticks,
+width=7.5cm,
+height=6cm,
+]
+\\addplot coordinates { $chord };
+\\addplot coordinates { $regularval };
+\\addplot coordinates { $wheelval };
+\\addplot coordinates { $complete };
+\\addplot coordinates { $path };
+\\addplot coordinates { $tree };
+\\addplot[black, fill=black] coordinates { $cycle };
+
+\\legend{ $$E_n$$, $$R_{4, n}$$, $$W_n$$, $$K_n$$, $$P_n$$, $$T_n$$, $$C_n$$}
+\\end{axis}
+\\end{tikzpicture}
+""")
+
+## Filling the plot
+
+tmp = params.groupby(['G', 'N']).time_dist.mean()
+
+t = figure1.safe_substitute(
+    xtick='{0, 1, 2, 3}',
+    xtlabel='{17, 23, 29, 31}',
+    ylabel='Elapsed time (seconds)',
+    xlabel='Number of players',
+    chord=' '.join(map(str, [x for x in enumerate(tmp['chordal'].values)])),
+    regularval=' '.join(map(str, [x for x in enumerate(tmp['regular'].values)])),
+    wheelval=' '.join(map(str, [x for x in enumerate(tmp['wheel'].values)])),
+    complete=' '.join(map(str, [x for x in enumerate(tmp['complete'].values)])),
+    path=' '.join(map(str, [x for x in enumerate(tmp['path'].values)])),
+    tree=' '.join(map(str, [x for x in enumerate(tmp['tree'].values)])),
+    cycle=' '.join(map(str, [x for x in enumerate(tmp['cycle'].values)])),
+)
+print(t)
+
+with open(outdir / 'comptop.tex', 'w') as fh: fh.write(t)
+
+#### Figure 2, iterations
+
+figure2 = Template("""
+\\begin{tikzpicture}
+\\begin{axis}[
+x tick label style={
+/pgf/number format/1000 sep=},
+xtick={ $xtick },
+xticklabels={ $xtlabel },
+yticklabel style={
+        /pgf/number format/fixed,
+        /pgf/number format/precision=5
+},
+scaled y ticks=false,
+ylabel= $ylabel,
+xlabel= $xlabel,
+legend style={at={(0.5,-0.25)},
+anchor=north,legend columns=-1},
+ybar,
+bar width=2pt,
+ylabel near ticks,
+width=7.5cm,
+height=6cm,
+]
+\\addplot coordinates { $chord };
+\\addplot coordinates { $regularval };
+\\addplot coordinates { $wheelval };
+\\addplot coordinates { $complete };
+\\addplot coordinates { $path };
+\\addplot coordinates { $tree };
+\\addplot[black, fill=black] coordinates { $cycle };
+
+\\legend{ $$E_n$$, $$R_{4, n}$$, $$W_n$$, $$K_n$$, $$P_n$$, $$T_n$$, $$C_n$$}
+\\end{axis}
+\\end{tikzpicture}
+""")
+
+## Filling the plot
+
+tmp2 = params.groupby(['G', 'N']).iters.mean()
+
+t2 = figure2.safe_substitute(
+    xtick='{0, 1, 2, 3}',
+    xtlabel='{17, 23, 29, 31}',
+    ylabel='Number of iterations before convergence',
+    xlabel='Number of players',
+    chord=' '.join(map(str, [x for x in enumerate(tmp2['chordal'].values)])),
+    regularval=' '.join(map(str, [x for x in enumerate(tmp2['regular'].values)])),
+    wheelval=' '.join(map(str, [x for x in enumerate(tmp2['wheel'].values)])),
+    complete=' '.join(map(str, [x for x in enumerate(tmp2['complete'].values)])),
+    path=' '.join(map(str, [x for x in enumerate(tmp2['path'].values)])),
+    tree=' '.join(map(str, [x for x in enumerate(tmp2['tree'].values)])),
+    cycle=' '.join(map(str, [x for x in enumerate(tmp2['cycle'].values)])),
+)
+print(t2)
+
+with open(outdir / 'niters.tex', 'w') as fh: fh.write(t2)

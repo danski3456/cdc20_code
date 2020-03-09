@@ -54,3 +54,42 @@ ax.set_ylabel('Elapsed time (seconds)')
 ax.legend(['Naive', 'Centralized', 'Distributed'])
 fig.show()
 fig.savefig(outdir / 'compalgs.pdf')
+
+from string import Template
+
+figure = Template("""
+\\begin{tikzpicture}
+\\begin{axis}[
+ymode=log,
+log ticks with fixed point,
+height=4.5cm,
+width=8cm,
+xlabel=Number of players,
+ylabel=Elapsed time (seconds),
+ylabel near ticks,
+cycle list name=color,
+legend style={at={(0.5,-0.35)},
+anchor=north,legend columns=-1},
+]
+
+\\addplot coordinates { $naive };
+\\addplot coordinates { $cent };
+\\addplot coordinates { $dist };
+
+\legend{Naive, Centralized, Distributed};
+\\end{axis}
+\\end{tikzpicture}
+""")
+
+naive_ = ' '.join(map(str, [(x, y) for x, y in df[['N','naive']].dropna().values]))
+cent_ = ' '.join(map(str, [(x, y) for x, y in df[['N','cent']].dropna().values]))
+dist_ = ' '.join(map(str, [(x, y) for x, y in df[['N','dist']].dropna().values]))
+
+t = figure.safe_substitute(
+    naive=naive_,
+    cent=cent_,
+    dist=dist_
+)
+print(t)
+
+with open(outdir / 'compalg.tex', 'w') as fh: fh.write(t)
