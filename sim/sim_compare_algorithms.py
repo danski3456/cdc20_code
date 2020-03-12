@@ -5,8 +5,8 @@ import pickle
 from src.newdist import main_dist
 from src.game import *
 from pathlib import Path
+from constants import OUTDIR_large
 
-OUTDIR = 'Outputs/cdc_5'
 
 params = [
     (5, 48, 'regular', 13, True),
@@ -17,15 +17,18 @@ params = [
     (17, 48, 'regular', 13, False),
     (30, 48, 'regular', 13, False),
     (50, 48, 'regular', 13, False),
-    (65, 48, 'regular', 13, False),
     (70, 48, 'regular', 13, False),
     (90, 48, 'regular', 13, False),
-    (100, 48, 'regular', 13, False),
+    (110, 48, 'regular', 13, False),
+    (130, 48, 'regular', 13, False),
+    (150, 48, 'chordal', 13, False),
+    (170, 48, 'chordal', 13, False),
+    (190, 48, 'chordal', 13, False),
 ]
 
 
 for N, T, G, seed, VF in params:
-    path_file = Path.home() / OUTDIR / '{}_{}_{}_{}.pkl'.format(N, T, G,seed)
+    path_file = OUTDIR_large / '{}_{}_{}_{}.pkl'.format(N, T, G,seed)
     if os.path.isfile(path_file):
         print('File aready exits')
     else:

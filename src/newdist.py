@@ -9,47 +9,6 @@ import time
 from scipy import sparse
 
 
-
-
-
-    
-
-def proyect_into_set(x, n, C_, b_, ma_):
-### Proyect into random polyedron
-
-    #A_ = np.array([
-    #    [1.0, 1.0],
-    #    [-4.0, 1.0],
-    #    [-6.0, 4.0]
-    #])
-    #b_ = np.array([2.0, 2.0, 1.0])
-    y = x.copy()
-    sol = proyect_into_linear(x[ma_], C_, b_)
-    np.put(y, ma_, sol[0])
-    return y
-
-## Project into ball of radius 3
-#    L = np.linalg.norm(x)
-#    if L <= 3:
-#        return x
-#    else: #        return x / L * 3
-
-def grad(x, n, grads_):
-    
-    return grads_[n]
-
-### Simple functions
-#    if n == 0:
-#        g = np.array([2, 1])
-#    elif n == 1:
-#        g = np.array([1, -2])
-#
-#    return g
-
-def alpha(k):
-    return 1 / N
-
-
 def get_grads(g):
 
     N, T = g.N, g.T
@@ -126,27 +85,21 @@ def main_dist(g):
             
             tmp = xs[n, :].copy()
             tmp -= ap * vs[n] 
-            tmp -= ap * grad(vs[n], n, grads)
+            #tmp -= ap * grad(vs[n], n, grads)
+            tmp -= ap * grads[n, :]
 
-            #tmp -= ap * np.dot(A[n], xs[n] - xs)
             for neig in NE[n]:
                 tmp -= ap * A[n, neig] * (xs[n, :] - xs[neig, :])
 
-#            if n != 0:
-            #start_ = time.time()
             tmp_x = tmp.copy()
             tmp_ = tmp[mas[n]]
-            #pr = proyect_into_set(tmp, n, C, b, mas[n])
             PROYECTIONS[n].update(q=-tmp_)
             res = PROYECTIONS[n].solve()
             np.put(tmp_x, mas[n], res.x)
             new_xs.append(tmp_x)
-            #new_xs.append(pr)
 
         
         xs_ = np.vstack(new_xs)
-        #for n in range(N):
-        #    vs[n] += np.dot(A[n], xs_[n] - xs_)
 
         for n in range(N):
             for neig in NE[n]:
