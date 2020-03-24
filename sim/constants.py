@@ -1,5 +1,5 @@
 from pathlib import Path
 
 
-OUTDIR_small = Path.home() / 'Outputs' / 'comp_graphs'
-OUTDIR_large = Path.home() / 'Outputs' / 'comp_algs'
+OUTDIR_small = Path.home() / 'Out' / 'comp_graphs'
+OUTDIR_large = Path.home() / 'Out' / 'comp_algs'

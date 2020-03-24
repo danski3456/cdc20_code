@@ -7,6 +7,7 @@ from src.game import *
 from pathlib import Path
 from sim.constants  import OUTDIR_small
 
+OUTDIR_small.mkdir(parents=True, exist_ok=True)
 
 if __name__ == '__main__':
 

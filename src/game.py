@@ -9,6 +9,7 @@ import networkx as nx
 from src.player import Player
 from src.utils import powerset, smallest_prime
 from src.build import solve_centralized, extract_core_payment, to_matrix_form
+from src.core import find_core
 from itertools import combinations
 
 
@@ -33,10 +34,12 @@ class Game(object):
         self._payoff_core = None
         self._res = None
         self._valfunc = None
+        self._core_naive = None
 
         self.G = G
         self.time_solve_fast = None
         self.time_get_valfunc = None
+        self.time_core_naive = None
         
         L = nx.laplacian_matrix(G).A
         ev = sorted(np.linalg.eigvals(L).real, reverse=True)
@@ -51,13 +54,13 @@ class Game(object):
 
     def solve(self):
         if self._model is None:
-            start_ = time.time()
+            start_ = time.clock()
             res = solve_centralized(self._player_list, self._buying_price,
             self._selling_price)
             self._model = res[0]
             self._res = res
             self._payoff_core = extract_core_payment(self)
-            end_ = time.time()
+            end_ = time.clock()
             self.time_solve_fast = end_ - start_
         return self._model
 
@@ -70,7 +73,7 @@ class Game(object):
 
     def get_valfunc(self):
         if self._valfunc is None:
-            start_ = time.time()
+            start_ = time.clock()
             pl = self._player_list
             pb = self._buying_price
             ps = self._selling_price
@@ -80,10 +83,25 @@ class Game(object):
                 r = solve_centralized([pl[i] for i in S], pb, ps)
                 valfunc[S] = r[0].objective.value()
             self._valfunc = valfunc
-            end_ = time.time()
+            end_ = time.clock()
             self.time_get_valfunc = end_ - start_
 
         return self._valfunc
+
+    def get_core_naive(self):
+
+        if self._core_naive is None:
+            start_ = time.clock()
+
+            V = self.get_valfunc()
+            core = find_core(V)
+            end_ = time.clock()
+            self._core_naive = core
+            self.time_core_naive = end_ - start_
+
+        return self._core_naive
+            
+
 
 
     def verify_core(self, payoff, i):

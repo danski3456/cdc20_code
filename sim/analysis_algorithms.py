@@ -5,6 +5,7 @@ import scipy as sp
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from string import Template
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -15,13 +16,20 @@ from pathlib import Path
 
 from sim.constants import OUTDIR_large
 
+name = sys.argv[1]
+
+if name == 'simple':
+    seed = 3
+elif name == 'complete':
+    seed = 13
+
 
 rows = []
-files = OUTDIR_large.glob('*_13.pkl')
+files = OUTDIR_large.glob('*_{0}.pkl'.format(seed))
 for fn in files:
     try:
         with open(fn, 'rb') as fh: data = pickle.load(fh)
-        N, T, G, S = fn.name[:-4].split('_')
+        name_, N, T, G, S = fn.name[:-4].split('_')
         g = data[0]
         time_dist = data[4]
         n_iter = data[-1]
@@ -34,26 +42,20 @@ for fn in files:
 df = pd.DataFrame(rows)
 df.columns = ['N', 'G', 'S', 'game', 'dist', 'iters']
 df['cent'] = df.game.map(lambda x: x.time_solve_fast)
-df['naive'] = df.game.map(lambda x: x.time_get_valfunc)
+df['naive'] = df.game.map(lambda x: x.time_core_naive)
 df['N'] = df['N'].astype(int)
 df = df.sort_values('N')
 
 melt = pd.melt(df, id_vars=['N'], value_vars=['dist', 'cent', 'naive'])
 
-fig, ax = plt.subplots(figsize=(14, 10))
-ax.plot(df.N, df.naive, marker='*')
-ax.set_yscale('log')
-ax.plot(df.N, df.cent, marker='*')
-ax.plot(df.N, df.dist, marker='*')
-ax.set_xlabel('Number of players')
-ax.set_ylabel('Elapsed time (seconds)')
-ax.legend(['Naive', 'Centralized', 'Distributed'])
-fig.show()
-fig.savefig(OUTDIR_large / 'compalgs.pdf')
 
-from string import Template
 
 figure = Template("""
+%\\documentclass{standalone}
+%\\usepackage{tikz}
+%\\usepackage{pgfplots}
+%\\begin{document}
+
 \\begin{tikzpicture}
 \\begin{axis}[
 ymode=log,
@@ -75,6 +77,8 @@ anchor=north,legend columns=-1},
 \legend{Naive, Centralized, Distributed};
 \\end{axis}
 \\end{tikzpicture}
+
+%\\end{document}
 """)
 
 naive_ = ' '.join(map(str, [(x, y) for x, y in df[['N','naive']].dropna().values]))
@@ -87,4 +91,4 @@ t = figure.safe_substitute(
     dist=dist_
 )
 
-with open(OUTDIR_large / 'compalg.tex', 'w') as fh: fh.write(t)
+with open(OUTDIR_large / '{}_compalg.tex'.format(name), 'w') as fh: fh.write(t)

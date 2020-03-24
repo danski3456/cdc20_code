@@ -15,7 +15,8 @@ from pathlib import Path
 
 from sim.constants import OUTDIR_small
 
-params = pd.read_csv('sim/params1.csv')
+name = sys.argv[1]
+params = pd.read_csv('sim/params_{}.csv'.format(name))
 
 
 params['game'] = None
@@ -42,6 +43,10 @@ params['time_cent'] = params.game.map(lambda x: x.time_solve_fast)
 from string import Template
 
 figure1 = Template("""
+%\\documentclass{standalone}
+%\\usepackage{tikz}
+%\\usepackage{pgfplots}
+%\\begin{document}
 \\begin{tikzpicture}
 \\begin{axis}[
 x tick label style={
@@ -74,15 +79,19 @@ height=6cm,
 \\legend{ $$E_n$$, $$R_{4, n}$$, $$W_n$$, $$K_n$$, $$P_n$$, $$T_n$$, $$C_n$$}
 \\end{axis}
 \\end{tikzpicture}
+%\\end{document}
 """)
 
 ## Filling the plot
 
 tmp = params.groupby(['G', 'N']).time_dist.mean()
 
+xtlabel_ = '{' + ', '.join(map(str, params.N.unique())) + '}'
+xtick_ = '{' + ', '.join(map(str, range(len(params.N.unique())))) + '}'
+
 t = figure1.safe_substitute(
-    xtick='{0, 1, 2, 3, 4}',
-    xtlabel='{17, 23, 29, 31, 37}',
+    xtick=xtick_,
+    xtlabel=xtlabel_,
     ylabel='Elapsed time (seconds)',
     xlabel='Number of players',
     chord=' '.join(map(str, [x for x in enumerate(tmp['chordal'].values)])),
@@ -94,11 +103,15 @@ t = figure1.safe_substitute(
     cycle=' '.join(map(str, [x for x in enumerate(tmp['cycle'].values)])),
 )
 
-with open(OUTDIR_small / 'comptop.tex', 'w') as fh: fh.write(t)
+with open(OUTDIR_small / '{0}_comptop.tex'.format(name), 'w') as fh: fh.write(t)
 
 #### Figure 2, iterations
 
 figure2 = Template("""
+%\\documentclass{standalone}
+%\\usepackage{tikz}
+%\\usepackage{pgfplots}
+%\\begin{document}
 \\begin{tikzpicture}
 \\begin{axis}[
 x tick label style={
@@ -131,6 +144,7 @@ height=6cm,
 \\legend{ $$E_n$$, $$R_{4, n}$$, $$W_n$$, $$K_n$$, $$P_n$$, $$T_n$$, $$C_n$$}
 \\end{axis}
 \\end{tikzpicture}
+%\\end{document}
 """)
 
 ## Filling the plot
@@ -138,8 +152,8 @@ height=6cm,
 tmp2 = params.groupby(['G', 'N']).iters.mean()
 
 t2 = figure2.safe_substitute(
-    xtick='{0, 1, 2, 3, 4}',
-    xtlabel='{17, 23, 29, 31, 37}',
+    xtick=xtick_,
+    xtlabel=xtlabel_,
     ylabel='Number of iterations before convergence',
     xlabel='Number of players',
     chord=' '.join(map(str, [x for x in enumerate(tmp2['chordal'].values)])),
@@ -151,4 +165,4 @@ t2 = figure2.safe_substitute(
     cycle=' '.join(map(str, [x for x in enumerate(tmp2['cycle'].values)])),
 )
 
-with open(OUTDIR_small / 'niters.tex', 'w') as fh: fh.write(t2)
+with open(OUTDIR_small / '{0}_niters.tex'.format(name), 'w') as fh: fh.write(t2)

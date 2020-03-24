@@ -6,29 +6,15 @@ from src.newdist import main_dist
 from src.game import *
 from pathlib import Path
 from constants import OUTDIR_large
+from sim.params_alg import params
 
+name = sys.argv[1]
+params = params[name]
 
-params = [
-    (5, 48, 'regular', 13, True),
-    (7, 48, 'regular', 13, True),
-    (9, 48, 'regular', 13, True),
-    (11, 48, 'regular', 13, True),
-    (13, 48, 'regular', 13, True),
-    (17, 48, 'regular', 13, False),
-    (30, 48, 'regular', 13, False),
-    (50, 48, 'regular', 13, False),
-    (70, 48, 'regular', 13, False),
-    (90, 48, 'regular', 13, False),
-    (110, 48, 'regular', 13, False),
-    (130, 48, 'regular', 13, False),
-    (150, 48, 'chordal', 13, False),
-    (170, 48, 'chordal', 13, False),
-    (190, 48, 'chordal', 13, False),
-]
-
+OUTDIR_large.mkdir(parents=True, exist_ok=True)
 
 for N, T, G, seed, VF in params:
-    path_file = OUTDIR_large / '{}_{}_{}_{}.pkl'.format(N, T, G,seed)
+    path_file = OUTDIR_large / '{}_{}_{}_{}_{}.pkl'.format(name, N, T, G,seed)
     if os.path.isfile(path_file):
         print('File aready exits')
     else:
@@ -40,7 +26,7 @@ for N, T, G, seed, VF in params:
         costs = np.sum(x.mean(axis=0) * gr, axis=1)
         pc = g.get_payoff_core()
         if VF is True:
-            _ = g.get_valfunc()
+            _ = g.get_core_naive()
         data = [g, x, gr, end - start, tim.sum(), costs, pc, niter]
         with open(path_file, 'wb') as fh:
             pickle.dump(data, fh)
