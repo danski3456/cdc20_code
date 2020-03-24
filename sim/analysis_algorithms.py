@@ -51,10 +51,10 @@ melt = pd.melt(df, id_vars=['N'], value_vars=['dist', 'cent', 'naive'])
 
 
 figure = Template("""
-%\\documentclass{standalone}
-%\\usepackage{tikz}
-%\\usepackage{pgfplots}
-%\\begin{document}
+\\documentclass{standalone}
+\\usepackage{tikz}
+\\usepackage{pgfplots}
+\\begin{document}
 
 \\begin{tikzpicture}
 \\begin{axis}[
@@ -78,7 +78,7 @@ anchor=north,legend columns=-1},
 \\end{axis}
 \\end{tikzpicture}
 
-%\\end{document}
+\\end{document}
 """)
 
 naive_ = ' '.join(map(str, [(x, y) for x, y in df[['N','naive']].dropna().values]))

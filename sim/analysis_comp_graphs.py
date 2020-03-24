@@ -43,10 +43,10 @@ params['time_cent'] = params.game.map(lambda x: x.time_solve_fast)
 from string import Template
 
 figure1 = Template("""
-%\\documentclass{standalone}
-%\\usepackage{tikz}
-%\\usepackage{pgfplots}
-%\\begin{document}
+\\documentclass{standalone}
+\\usepackage{tikz}
+\\usepackage{pgfplots}
+\\begin{document}
 \\begin{tikzpicture}
 \\begin{axis}[
 x tick label style={
@@ -79,7 +79,7 @@ height=6cm,
 \\legend{ $$E_n$$, $$R_{4, n}$$, $$W_n$$, $$K_n$$, $$P_n$$, $$T_n$$, $$C_n$$}
 \\end{axis}
 \\end{tikzpicture}
-%\\end{document}
+\\end{document}
 """)
 
 ## Filling the plot
@@ -108,10 +108,10 @@ with open(OUTDIR_small / '{0}_comptop.tex'.format(name), 'w') as fh: fh.write(t)
 #### Figure 2, iterations
 
 figure2 = Template("""
-%\\documentclass{standalone}
-%\\usepackage{tikz}
-%\\usepackage{pgfplots}
-%\\begin{document}
+\\documentclass{standalone}
+\\usepackage{tikz}
+\\usepackage{pgfplots}
+\\begin{document}
 \\begin{tikzpicture}
 \\begin{axis}[
 x tick label style={
@@ -144,7 +144,7 @@ height=6cm,
 \\legend{ $$E_n$$, $$R_{4, n}$$, $$W_n$$, $$K_n$$, $$P_n$$, $$T_n$$, $$C_n$$}
 \\end{axis}
 \\end{tikzpicture}
-%\\end{document}
+\\end{document}
 """)
 
 ## Filling the plot
