@@ -13,27 +13,23 @@ import os
 import sys
 from pathlib import Path
 
-#from sim.constants import OUTDIR
-
-#params = pd.read_csv('sim/params1.csv')
-
-OUTDIR = 'Outputs/cdc_5'
-
-outdir = Path.home() / OUTDIR
+from sim.constants import OUTDIR_large
 
 
 rows = []
-files = outdir.glob('*_13.pkl')
+files = OUTDIR_large.glob('*_13.pkl')
 for fn in files:
-    with open(fn, 'rb') as fh: data = pickle.load(fh)
-    N, T, G, S = fn.name[:-4].split('_')
-    g = data[0]
-    time_dist = data[4]
-    n_iter = data[-1]
+    try:
+        with open(fn, 'rb') as fh: data = pickle.load(fh)
+        N, T, G, S = fn.name[:-4].split('_')
+        g = data[0]
+        time_dist = data[4]
+        n_iter = data[-1]
 
-    tup = (N, G, S, g, time_dist, n_iter)
-    rows.append(tup)
-#    print(data)
+        tup = (N, G, S, g, time_dist, n_iter)
+        rows.append(tup)
+    except Exception as e:
+        print(e)
     
 df = pd.DataFrame(rows)
 df.columns = ['N', 'G', 'S', 'game', 'dist', 'iters']
@@ -53,7 +49,7 @@ ax.set_xlabel('Number of players')
 ax.set_ylabel('Elapsed time (seconds)')
 ax.legend(['Naive', 'Centralized', 'Distributed'])
 fig.show()
-fig.savefig(outdir / 'compalgs.pdf')
+fig.savefig(OUTDIR_large / 'compalgs.pdf')
 
 from string import Template
 
@@ -90,6 +86,5 @@ t = figure.safe_substitute(
     cent=cent_,
     dist=dist_
 )
-print(t)
 
-with open(outdir / 'compalg.tex', 'w') as fh: fh.write(t)
+with open(OUTDIR_large / 'compalg.tex', 'w') as fh: fh.write(t)

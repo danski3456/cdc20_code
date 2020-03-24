@@ -13,13 +13,10 @@ import os
 import sys
 from pathlib import Path
 
-#from sim.constants import OUTDIR
+from sim.constants import OUTDIR_small
 
 params = pd.read_csv('sim/params1.csv')
 
-OUTDIR = 'Outputs/cdc6'
-
-outdir = Path.home() / OUTDIR
 
 params['game'] = None
 params['time_dist'] = 0
@@ -27,7 +24,7 @@ params['iters'] = 0
 for i, r in params.iterrows():
     fn = '{}_{}_{}_{}.pkl'.format(r.N, r['T'], r.G.strip(), r.S)
     try:
-        with open(outdir / fn, 'rb') as fh: data = pickle.load(fh)
+        with open(OUTDIR_small / fn, 'rb') as fh: data = pickle.load(fh)
         params.loc[i, 'game'] = data[0]
         params.loc[i, 'time_dist'] = data[4]
         params.loc[i, 'iters'] = data[-1]
@@ -41,22 +38,6 @@ params = params.sort_values(['N', 'time_dist'])
 params['time_cent'] = params.game.map(lambda x: x.time_solve_fast)
 
 
-hueo = params[params.N == 23].groupby('G').time_dist.mean().sort_values().index.values
-fig, ax = plt.subplots(figsize=(14, 10))
-sns.barplot(data=params, x='N', y='time_dist', hue='G', ax=ax, hue_order=hueo)
-ax.set_xlabel('Number of players')
-ax.set_ylabel('Elapsed time (seconds)')
-fig.show()
-fig.savefig(outdir / 'elapsec.pdf')
-
-
-
-fig, ax = plt.subplots(figsize=(14, 10))
-sns.barplot(data=params, x='N', y='iters', hue='G', ax=ax)
-ax.set_xlabel('Number of players')
-ax.set_ylabel('Number of iterations before convergence')
-fig.show()
-fig.savefig(outdir / 'niters.pdf')
 
 from string import Template
 
@@ -100,8 +81,8 @@ height=6cm,
 tmp = params.groupby(['G', 'N']).time_dist.mean()
 
 t = figure1.safe_substitute(
-    xtick='{0, 1, 2, 3}',
-    xtlabel='{17, 23, 29, 31}',
+    xtick='{0, 1, 2, 3, 4}',
+    xtlabel='{17, 23, 29, 31, 37}',
     ylabel='Elapsed time (seconds)',
     xlabel='Number of players',
     chord=' '.join(map(str, [x for x in enumerate(tmp['chordal'].values)])),
@@ -112,9 +93,8 @@ t = figure1.safe_substitute(
     tree=' '.join(map(str, [x for x in enumerate(tmp['tree'].values)])),
     cycle=' '.join(map(str, [x for x in enumerate(tmp['cycle'].values)])),
 )
-print(t)
 
-with open(outdir / 'comptop.tex', 'w') as fh: fh.write(t)
+with open(OUTDIR_small / 'comptop.tex', 'w') as fh: fh.write(t)
 
 #### Figure 2, iterations
 
@@ -158,8 +138,8 @@ height=6cm,
 tmp2 = params.groupby(['G', 'N']).iters.mean()
 
 t2 = figure2.safe_substitute(
-    xtick='{0, 1, 2, 3}',
-    xtlabel='{17, 23, 29, 31}',
+    xtick='{0, 1, 2, 3, 4}',
+    xtlabel='{17, 23, 29, 31, 37}',
     ylabel='Number of iterations before convergence',
     xlabel='Number of players',
     chord=' '.join(map(str, [x for x in enumerate(tmp2['chordal'].values)])),
@@ -170,6 +150,5 @@ t2 = figure2.safe_substitute(
     tree=' '.join(map(str, [x for x in enumerate(tmp2['tree'].values)])),
     cycle=' '.join(map(str, [x for x in enumerate(tmp2['cycle'].values)])),
 )
-print(t2)
 
-with open(outdir / 'niters.tex', 'w') as fh: fh.write(t2)
+with open(OUTDIR_small / 'niters.tex', 'w') as fh: fh.write(t2)
