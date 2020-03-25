@@ -23,7 +23,7 @@ params['game'] = None
 params['time_dist'] = 0
 params['iters'] = 0
 for i, r in params.iterrows():
-    fn = '{}_{}_{}_{}.pkl'.format(r.N, r['T'], r.G.strip(), r.S)
+    fn = '{}_{}_{}_{}_{}.pkl'.format(name, r.N, r['T'], r.G.strip(), r.S)
     try:
         with open(OUTDIR_small / fn, 'rb') as fh: data = pickle.load(fh)
         params.loc[i, 'game'] = data[0]

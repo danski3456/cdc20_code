@@ -12,8 +12,6 @@ params = {
     (109, 48, 'chordal', 13, False),
     (131, 48, 'chordal', 13, False),
     (151, 48, 'chordal', 13, False),
-    (173, 48, 'chordal', 13, False),
-    (191, 48, 'chordal', 13, False),
 ],
 'simple' : [
     (3, 5, 'regular', 3, True),
