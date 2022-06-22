@@ -35,7 +35,7 @@ more-itertools==8.2.0
 multidict==4.7.5
 networkx==2.4
 numba==0.48.0
-numpy==1.18.1
+numpy==1.22.0
 osqp==0.6.1
 packaging==20.1
 pandas==1.0.1
